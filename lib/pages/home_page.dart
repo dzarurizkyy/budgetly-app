@@ -136,7 +136,7 @@ class _HomePageState extends State<HomePage> {
                         fontSize: 16),
                   ),
                   subtitle: Text(
-                    "Lunch",
+                    "Food",
                     style: TextStyle(
                         color: Colors.blueGrey,
                         fontWeight: FontWeight.w500,
@@ -185,7 +185,7 @@ class _HomePageState extends State<HomePage> {
                         fontSize: 16),
                   ),
                   subtitle: Text(
-                    "Monthly Salary",
+                    "Salary",
                     style: TextStyle(
                         color: Colors.blueGrey,
                         fontWeight: FontWeight.w500,
