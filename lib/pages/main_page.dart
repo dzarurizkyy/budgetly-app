@@ -1,6 +1,7 @@
 import 'package:calendar_appbar/calendar_appbar.dart';
 import 'package:expenses_tracker_app/pages/home_page.dart';
 import 'package:expenses_tracker_app/pages/category_page.dart';
+import 'package:expenses_tracker_app/pages/transaction_page.dart';
 import 'package:flutter/material.dart';
 
 class MainPage extends StatefulWidget {
@@ -59,7 +60,14 @@ class _MainPageState extends State<MainPage> {
       floatingActionButton: Visibility(
         visible: (currentIndex == 0) ? true : false,
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context)
+                .push(
+                    MaterialPageRoute(builder: (context) => TransactionPage()))
+                .then((value) {
+              setState(() {});
+            });
+          },
           backgroundColor: Colors.blueGrey,
           shape: CircleBorder(),
           child: Icon(
