@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:expenses_tracker_app/pages/home_page.dart';
+import 'package:expenses_tracker_app/models/database.dart';
 
 class TransactionPage extends StatefulWidget {
   const TransactionPage({super.key});
@@ -9,10 +11,38 @@ class TransactionPage extends StatefulWidget {
 }
 
 class _TransactionPageState extends State<TransactionPage> {
+  final AppDatabase database = AppDatabase();
   bool isExpense = true;
-  List<String> list = ["Choose Category", "Food", "Transportation", "Coffee"];
-  late String dropDownValue = list.first;
+  late int type;
+
   TextEditingController dateController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
+  TextEditingController detailController = TextEditingController();
+  String? selectedCategory;
+  String defaultCategory = "";
+
+  Future insert(
+      int amount, DateTime date, String nameDetail, int categoryId) async {
+    DateTime now = DateTime.now();
+    await database.into(database.transactions).insertReturning(
+        TransactionsCompanion.insert(
+            name: nameDetail,
+            categoryId: categoryId,
+            amount: amount,
+            transactionDate: now,
+            createdAt: now,
+            updatedAt: now));
+  }
+
+  Future<List<Category>> getAllCategory(int type) async {
+    return await database.getAllCategory(type);
+  }
+
+  @override
+  void initState() {
+    type = 2;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +81,8 @@ class _TransactionPageState extends State<TransactionPage> {
                           onChanged: (bool value) {
                             setState(() {
                               isExpense = value;
+                              type = (isExpense) ? 2 : 1;
+                              selectedCategory = null;
                             });
                           },
                           inactiveTrackColor: Colors.green[200],
@@ -72,6 +104,7 @@ class _TransactionPageState extends State<TransactionPage> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 child: TextFormField(
+                  controller: amountController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                       border: UnderlineInputBorder(),
@@ -79,42 +112,58 @@ class _TransactionPageState extends State<TransactionPage> {
                       labelStyle: TextStyle(color: Colors.grey)),
                 ),
               ),
-              Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 0),
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                        enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black54))),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-                      child: DropdownButton<String>(
-                        value: dropDownValue,
-                        isExpanded: true,
-                        underline: Container(),
-                        items:
-                            list.map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(
-                              value,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w400,
-                                  color: value == "Choose Category"
-                                      ? Colors.grey
-                                      : Colors.black),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (String? value) {
-                          setState(() {
-                            if (value != "Choose Category") {
-                              dropDownValue = value!;
-                            }
-                          });
-                        },
-                      ),
-                    ),
-                  )),
+              FutureBuilder<List<Category>>(
+                  future: getAllCategory((type)),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else {
+                      if (snapshot.hasData) {
+                        if (snapshot.data!.isNotEmpty) {
+                          defaultCategory = snapshot.data!.first.id.toString();
+                          return Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 0),
+                              child: InputDecorator(
+                                decoration: InputDecoration(
+                                    enabledBorder: UnderlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.black54))),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 0, vertical: 0),
+                                  child: DropdownButton<String>(
+                                    value: selectedCategory ??
+                                        snapshot.data!.first.id.toString(),
+                                    isExpanded: true,
+                                    underline: Container(),
+                                    items: snapshot.data!
+                                        .map<DropdownMenuItem<String>>(
+                                            (Category item) {
+                                      return DropdownMenuItem<String>(
+                                        value: item.id.toString(),
+                                        child: Text(
+                                          item.name,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w400),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? value) {
+                                      setState(() {
+                                        selectedCategory = value;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ));
+                        } else {
+                          return Center(child: Text("No has data"));
+                        }
+                      }
+                      return Center(child: Text("No has data"));
+                    }
+                  }),
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
@@ -141,12 +190,29 @@ class _TransactionPageState extends State<TransactionPage> {
                   },
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+                child: TextFormField(
+                    controller: detailController,
+                    decoration: InputDecoration(
+                        labelText: "Enter Detail",
+                        labelStyle: TextStyle(color: Colors.grey)),
+                    onTap: () {}),
+              ),
               SizedBox(
                 height: 26,
               ),
               Center(
                   child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        insert(
+                            int.parse(amountController.text),
+                            DateTime.parse(dateController.text),
+                            detailController.text,
+                            int.parse(selectedCategory ?? defaultCategory));
+                        Navigator.of(context, rootNavigator: true)
+                            .pop(HomePage());
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blueGrey,
                       ),
