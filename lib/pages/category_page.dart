@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:expenses_tracker_app/models/database.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
@@ -9,7 +10,30 @@ class CategoryPage extends StatefulWidget {
 
 class _CategoryPageState extends State<CategoryPage> {
   bool isExpense = true;
-  void openDialog() {
+  int type = 2;
+  final AppDatabase database = AppDatabase();
+  TextEditingController categoryNameController = TextEditingController();
+
+  Future insert(String name, int type) async {
+    DateTime now = DateTime.now();
+    await database.into(database.categories).insertReturning(
+        CategoriesCompanion.insert(
+            name: name, type: type, createdAt: now, updatedAt: now));
+  }
+
+  Future update(int categoryId, String newName) async {
+    return await database.updateCategoryRepo(categoryId, newName);
+  }
+
+  Future<List<Category>> getAllCategory(int type) async {
+    return await database.getAllCategory(type);
+  }
+
+  void openDialog(Category? category) {
+    if (category != null) {
+      categoryNameController.text = category.name;
+    }
+
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -23,7 +47,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   child: Center(
                       child: Column(children: [
                     Text(
-                      "Add Category",
+                      "${category == null ? "Add" : "Edit"} ${isExpense == true ? "Expense" : "Income"}",
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -31,13 +55,25 @@ class _CategoryPageState extends State<CategoryPage> {
                     ),
                     SizedBox(height: 15),
                     TextFormField(
+                        controller: categoryNameController,
                         decoration: InputDecoration(
                             border: OutlineInputBorder(), hintText: "Name")),
                     SizedBox(height: 15),
                     ElevatedButton(
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueGrey),
-                        onPressed: () {},
+                        onPressed: () {
+                          if (category == null) {
+                            insert(
+                                categoryNameController.text, isExpense ? 2 : 1);
+                          } else {
+                            update(category.id, categoryNameController.text);
+                          }
+                          Navigator.of(context, rootNavigator: true)
+                              .pop("dialog");
+                          setState(() {});
+                          categoryNameController.clear();
+                        },
                         child: Text(
                           "Save",
                           style: TextStyle(color: Colors.white),
@@ -70,6 +106,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     onChanged: (bool value) {
                       setState(() {
                         isExpense = value;
+                        type = value ? 2 : 1;
                       });
                     },
                     inactiveTrackColor: Colors.green[200],
@@ -79,107 +116,95 @@ class _CategoryPageState extends State<CategoryPage> {
                 ),
                 IconButton(
                     onPressed: () {
-                      openDialog();
+                      openDialog(null);
                     },
                     icon: Icon(Icons.add))
               ],
             ),
           ),
         ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 3),
-          child: Card(
-            elevation: 0.3,
-            child: Padding(
-              padding: const EdgeInsets.all(1),
-              child: ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                      color: Colors.blueGrey[400],
-                      borderRadius: BorderRadius.circular(20)),
-                  child: (isExpense == true)
-                      ? Icon(
-                          Icons.upload,
-                          color: Colors.white,
-                        )
-                      : Icon(
-                          Icons.download,
-                          color: Colors.white,
-                        ),
-                ),
-                title: Text("Food",
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.blueGrey,
-                        fontSize: 15)),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.delete,
-                      color: Colors.blueGrey[400],
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Icon(
-                      Icons.edit,
-                      color: Colors.blueGrey[400],
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
+        FutureBuilder<List<Category>>(
+          future: getAllCategory(type),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else {
+              if (snapshot.hasData) {
+                if (snapshot.data!.isNotEmpty) {
+                  return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 15, vertical: 3),
+                          child: Card(
+                            elevation: 0.3,
+                            child: Padding(
+                              padding: const EdgeInsets.all(1),
+                              child: ListTile(
+                                leading: Container(
+                                  padding: EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                      color: Colors.blueGrey[400],
+                                      borderRadius: BorderRadius.circular(20)),
+                                  child: (isExpense == true)
+                                      ? Icon(
+                                          Icons.upload,
+                                          color: Colors.white,
+                                        )
+                                      : Icon(
+                                          Icons.download,
+                                          color: Colors.white,
+                                        ),
+                                ),
+                                title: Text(snapshot.data![index].name,
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.blueGrey,
+                                        fontSize: 15)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.delete,
+                                        color: Colors.blueGrey,
+                                      ),
+                                      onPressed: () {
+                                        database.deleteCategoryRepo(
+                                            snapshot.data![index].id);
+                                        setState(() {});
+                                      },
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.edit,
+                                        color: Colors.blueGrey,
+                                      ),
+                                      onPressed: () {
+                                        openDialog(snapshot.data![index]);
+                                      },
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      });
+                } else {
+                  return Center(child: Text("No has data"));
+                }
+              } else {
+                return Center(child: Text("No has data"));
+              }
+            }
+          },
         ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 3),
-          child: Card(
-            elevation: 0.3,
-            child: Padding(
-              padding: const EdgeInsets.all(1),
-              child: ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                      color: Colors.blueGrey[400],
-                      borderRadius: BorderRadius.circular(20)),
-                  child: (isExpense == true)
-                      ? Icon(
-                          Icons.upload,
-                          color: Colors.white,
-                        )
-                      : Icon(
-                          Icons.download,
-                          color: Colors.white,
-                        ),
-                ),
-                title: Text("Salary",
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.blueGrey,
-                        fontSize: 15)),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.delete,
-                      color: Colors.blueGrey[400],
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Icon(
-                      Icons.edit,
-                      color: Colors.blueGrey[400],
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
-        )
       ],
     ));
   }
