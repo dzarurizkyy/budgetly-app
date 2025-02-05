@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:expenses_tracker_app/models/transaction_with_category.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
@@ -15,7 +16,7 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
-  Future<List<Category>> getAllCategory(int type) async {
+  Future<List<Category>> getAllCategoryRepo(int type) async {
     return await (select(categories)..where((tbl) => tbl.type.equals(type)))
         .get();
   }
@@ -27,6 +28,27 @@ class AppDatabase extends _$AppDatabase {
 
   Future deleteCategoryRepo(int id) async {
     return (delete(categories)..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  Stream<List<TransactionWithCategory>> getTransactionByDateRepo(
+      DateTime date) {
+    final startDate = DateTime(date.year, date.month, date.day, 0, 0, 0);
+    final endDate = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final query = (select(transactions).join([
+      innerJoin(categories, categories.id.equalsExp(transactions.categoryId))
+    ])
+      ..where(
+          transactions.transactionDate.isBetweenValues(startDate, endDate)));
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithCategory(
+          row.readTable(transactions),
+          row.readTable(categories),
+        );
+      }).toList();
+    });
   }
 }
 

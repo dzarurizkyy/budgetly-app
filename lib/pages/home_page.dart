@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:expenses_tracker_app/models/database.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final DateTime selectedDate;
+  const HomePage({super.key, required this.selectedDate});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  final AppDatabase database = AppDatabase();
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return CustomScrollView(
+      slivers: [
+        SliverList(
+          delegate: SliverChildListDelegate([
             // Income and Expense
             Padding(
               padding: const EdgeInsets.all(16),
@@ -111,108 +114,99 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.blueGrey),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, top: 10, bottom: 6),
-              child: Card(
-                color: Colors.white70,
-                elevation: 1,
-                child: ListTile(
-                  leading: Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                        color: Colors.blueGrey[400],
-                        borderRadius: BorderRadius.circular(20)),
-                    child: Icon(
-                      Icons.upload,
-                      color: Colors.white,
-                    ),
-                  ),
-                  title: Text(
-                    "Rp20.000",
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.blueGrey,
-                        fontSize: 16),
-                  ),
-                  subtitle: Text(
-                    "Food",
-                    style: TextStyle(
-                        color: Colors.blueGrey,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.delete,
-                        color: Colors.blueGrey[400],
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Icon(
-                        Icons.edit,
-                        color: Colors.blueGrey[400],
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-              child: Card(
-                color: Colors.white70,
-                elevation: 1,
-                child: ListTile(
-                  leading: Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                        color: Colors.blueGrey[400],
-                        borderRadius: BorderRadius.circular(20)),
-                    child: Icon(
-                      Icons.download,
-                      color: Colors.white,
-                    ),
-                  ),
-                  title: Text(
-                    "Rp20.000",
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.blueGrey,
-                        fontSize: 16),
-                  ),
-                  subtitle: Text(
-                    "Salary",
-                    style: TextStyle(
-                        color: Colors.blueGrey,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.delete,
-                        color: Colors.blueGrey[400],
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Icon(
-                        Icons.edit,
-                        color: Colors.blueGrey[400],
-                      )
-                    ],
-                  ),
-                ),
-              ),
+            SizedBox(
+              height: 10,
             )
-          ],
+          ]),
         ),
-      ),
+        StreamBuilder(
+            stream: database.getTransactionByDateRepo(widget.selectedDate),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return SliverToBoxAdapter(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              } else {
+                if (snapshot.hasData) {
+                  if (snapshot.data!.isNotEmpty) {
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                left: 16, right: 16, top: 4, bottom: 0),
+                            child: Card(
+                              color: Colors.white70,
+                              elevation: 1,
+                              child: ListTile(
+                                leading: Container(
+                                  padding: EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                      color: Colors.blueGrey[400],
+                                      borderRadius: BorderRadius.circular(20)),
+                                  child: Icon(
+                                    snapshot.data![index].category.type == 2
+                                        ? Icons.upload
+                                        : Icons.download,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                title: Text(
+                                  "Rp${snapshot.data![index].transaction.amount}",
+                                  style: TextStyle( 
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.blueGrey,
+                                      fontSize: 16),
+                                ),
+                                subtitle: Text(
+                                  "${snapshot.data![index].category.name} (${snapshot.data![index].transaction.name})",
+                                  style: TextStyle(
+                                      color: Colors.blueGrey,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.delete,
+                                      color: Colors.blueGrey[400],
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Icon(
+                                      Icons.edit,
+                                      color: Colors.blueGrey[400],
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        childCount: snapshot.data!.length,
+                      ),
+                    );
+                  } else {
+                    return SliverToBoxAdapter(
+                      child: Center(
+                        child: Text("No data available"),
+                      ),
+                    );
+                  }
+                } else {
+                  return SliverToBoxAdapter(
+                    child: Center(
+                      child: Text("No data available"),
+                    ),
+                  );
+                }
+              }
+            }),
+      ],
     );
   }
 }

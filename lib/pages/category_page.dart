@@ -26,7 +26,7 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   Future<List<Category>> getAllCategory(int type) async {
-    return await database.getAllCategory(type);
+    return await database.getAllCategoryRepo(type);
   }
 
   void openDialog(Category? category) {
@@ -137,11 +137,11 @@ class _CategoryPageState extends State<CategoryPage> {
                       itemBuilder: (context, index) {
                         return Padding(
                           padding:
-                              EdgeInsets.symmetric(horizontal: 15, vertical: 3),
+                              EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           child: Card(
                             elevation: 0.3,
                             child: Padding(
-                              padding: const EdgeInsets.all(1),
+                              padding: const EdgeInsets.all(0),
                               child: ListTile(
                                 leading: Container(
                                   padding: EdgeInsets.all(4),
@@ -176,9 +176,6 @@ class _CategoryPageState extends State<CategoryPage> {
                                             snapshot.data![index].id);
                                         setState(() {});
                                       },
-                                    ),
-                                    SizedBox(
-                                      width: 10,
                                     ),
                                     IconButton(
                                       icon: Icon(

@@ -1,6 +1,6 @@
+import 'package:expenses_tracker_app/pages/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:expenses_tracker_app/pages/home_page.dart';
 import 'package:expenses_tracker_app/models/database.dart';
 
 class TransactionPage extends StatefulWidget {
@@ -24,7 +24,7 @@ class _TransactionPageState extends State<TransactionPage> {
   Future insert(
       int amount, DateTime date, String nameDetail, int categoryId) async {
     DateTime now = DateTime.now();
-    await database.into(database.transactions).insertReturning(
+    final check = await database.into(database.transactions).insertReturning(
         TransactionsCompanion.insert(
             name: nameDetail,
             categoryId: categoryId,
@@ -32,10 +32,12 @@ class _TransactionPageState extends State<TransactionPage> {
             transactionDate: now,
             createdAt: now,
             updatedAt: now));
+
+    print("aman : ${check}");
   }
 
   Future<List<Category>> getAllCategory(int type) async {
-    return await database.getAllCategory(type);
+    return await database.getAllCategoryRepo(type);
   }
 
   @override
@@ -210,8 +212,8 @@ class _TransactionPageState extends State<TransactionPage> {
                             DateTime.parse(dateController.text),
                             detailController.text,
                             int.parse(selectedCategory ?? defaultCategory));
-                        Navigator.of(context, rootNavigator: true)
-                            .pop(HomePage());
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => MainPage()));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blueGrey,

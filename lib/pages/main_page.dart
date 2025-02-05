@@ -3,6 +3,7 @@ import 'package:expenses_tracker_app/pages/home_page.dart';
 import 'package:expenses_tracker_app/pages/category_page.dart';
 import 'package:expenses_tracker_app/pages/transaction_page.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -12,13 +13,29 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  DateTime selectedDate = DateTime.now();
-  final List<Widget> _children = [HomePage(), CategoryPage()];
-  int currentIndex = 0;
+  late DateTime selectedDate;
+  late int currentIndex;
+  late List<Widget> _children;
 
-  void onTapTapped(int index) {
+  @override
+  void initState() {
+    updateView(0, DateTime.now());
+    super.initState();
+  }
+
+  void updateView(int index, DateTime? date) {
     setState(() {
+      if (date != null) {
+        selectedDate = DateTime.parse(DateFormat("yyyy-MM-dd").format(date));
+      }
+
       currentIndex = index;
+      _children = [
+        HomePage(
+          selectedDate: selectedDate,
+        ),
+        CategoryPage()
+      ];
     });
   }
 
@@ -36,7 +53,13 @@ class _MainPageState extends State<MainPage> {
                       accent: Colors.blueGrey,
                       backButton: false,
                       locale: "en",
-                      onDateChanged: (value) => (),
+                      onDateChanged: (value) {
+                        setState(() {
+                          print("Selected Date ${value}");
+                          selectedDate = value;
+                          updateView(0, selectedDate);
+                        });
+                      },
                       firstDate: DateTime.now().subtract(Duration(days: 140)),
                       lastDate: DateTime.now(),
                     ),
@@ -83,7 +106,7 @@ class _MainPageState extends State<MainPage> {
         children: [
           IconButton(
               onPressed: () {
-                onTapTapped(0);
+                updateView(0, DateTime.now());
               },
               icon: Icon(Icons.home)),
           SizedBox(
@@ -91,7 +114,7 @@ class _MainPageState extends State<MainPage> {
           ),
           IconButton(
               onPressed: () {
-                onTapTapped(1);
+                updateView(1, null);
               },
               icon: Icon(Icons.list))
         ],
