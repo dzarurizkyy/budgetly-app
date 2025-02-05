@@ -7,11 +7,9 @@ This is expense tracker app for managing finances, tracking incomes and expenses
 
 ## Screenshots 📱
 <p align="center">
-  <img src="https://github.com/dzarurizkyy/budgetly-app/blob/main/lib/assets/readme/display-app-1.jpeg" width="200">
-  &nbsp;  &nbsp;
-  <img src="https://github.com/dzarurizkyy/budgetly-app/blob/main/lib/assets/readme/display-app-2.jpeg" width="200">
-  &nbsp;  &nbsp;
-  <img src="https://github.com/dzarurizkyy/budgetly-app/blob/main/lib/assets/readme/display-app-3.jpeg" width="200">
+  <img src="https://github.com/dzarurizkyy/budgetly-app/blob/main/lib/assets/readme/display-app-1.jpeg" width="230">
+  <img src="https://github.com/dzarurizkyy/budgetly-app/blob/main/lib/assets/readme/display-app-2.jpeg" width="230">
+  <img src="https://github.com/dzarurizkyy/budgetly-app/blob/main/lib/assets/readme/display-app-3.jpeg" width="230">
 </p>
 
 ## Dependencies 🔗 
