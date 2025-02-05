@@ -1,7 +1,7 @@
 import 'package:calendar_appbar/calendar_appbar.dart';
-import 'package:expenses_tracker_app/pages/home_page.dart';
-import 'package:expenses_tracker_app/pages/category_page.dart';
-import 'package:expenses_tracker_app/pages/transaction_page.dart';
+import 'package:budgetly/pages/home_page.dart';
+import 'package:budgetly/pages/category_page.dart';
+import 'package:budgetly/pages/transaction_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -55,7 +55,6 @@ class _MainPageState extends State<MainPage> {
                       locale: "en",
                       onDateChanged: (value) {
                         setState(() {
-                          print("Selected Date ${value}");
                           selectedDate = value;
                           updateView(0, selectedDate);
                         });
@@ -85,8 +84,10 @@ class _MainPageState extends State<MainPage> {
         child: FloatingActionButton(
           onPressed: () {
             Navigator.of(context)
-                .push(
-                    MaterialPageRoute(builder: (context) => TransactionPage()))
+                .push(MaterialPageRoute(
+                    builder: (context) => TransactionPage(
+                          transactionWithCategory: null,
+                        )))
                 .then((value) {
               setState(() {});
             });

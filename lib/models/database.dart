@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:expenses_tracker_app/models/transaction_with_category.dart';
+import 'package:budgetly/models/transaction_with_category.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
-import 'package:expenses_tracker_app/models/categories.dart';
-import 'package:expenses_tracker_app/models/transactions.dart';
+import 'package:budgetly/models/categories.dart';
+import 'package:budgetly/models/transactions.dart';
 
 part 'database.g.dart';
 
@@ -28,6 +28,44 @@ class AppDatabase extends _$AppDatabase {
 
   Future deleteCategoryRepo(int id) async {
     return (delete(categories)..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  Future updateTransaction(int id, int amount, int categoryId,
+      DateTime transactionDate, String nameDetail) async {
+    final updatedAt = DateTime.now();
+
+    return (update(transactions)..where((tbl) => tbl.id.equals(id))).write(
+        TransactionsCompanion(
+            name: Value(nameDetail),
+            amount: Value(amount),
+            categoryId: Value(categoryId),
+            transactionDate: Value(transactionDate),
+            updatedAt: Value(updatedAt)));
+  }
+
+  Future deleteTransactionRepo(int id) async {
+    return (delete(transactions)..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  Future<double> getTotalTransactionByDateRepo(
+      DateTime date, int type) async {
+    final startDate = DateTime(date.year, date.month, date.day, 0, 0, 0);
+    final endDate = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final query = (select(transactions).join([
+      innerJoin(categories, categories.id.equalsExp(transactions.categoryId))
+    ])
+      ..where(transactions.transactionDate.isBetweenValues(startDate, endDate))
+      ..where(categories.type.equals(type)));
+
+    final result = await query.get();
+    double total = 0.0;
+
+    for (var row in result) {
+      total += row.readTable(transactions).amount;
+    }
+
+    return total;
   }
 
   Stream<List<TransactionWithCategory>> getTransactionByDateRepo(

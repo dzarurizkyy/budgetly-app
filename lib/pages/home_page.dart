@@ -1,5 +1,6 @@
+import 'package:budgetly/pages/transaction_page.dart';
 import 'package:flutter/material.dart';
-import 'package:expenses_tracker_app/models/database.dart';
+import 'package:budgetly/models/database.dart';
 
 class HomePage extends StatefulWidget {
   final DateTime selectedDate;
@@ -45,24 +46,40 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Income",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              "Rp300.000",
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 13),
-                            )
-                          ],
-                        ),
+                        FutureBuilder<double>(
+                            future: database.getTotalTransactionByDateRepo(
+                                widget.selectedDate, 1),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              } else {
+                                if (snapshot.hasError) {
+                                  return Center(
+                                    child: Text("0"),
+                                  );
+                                }
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Income",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      "Rp${snapshot.data!.toStringAsFixed(0)}",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 13),
+                                    )
+                                  ],
+                                );
+                              }
+                            }),
                       ],
                     ),
                     Row(
@@ -79,26 +96,42 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Expense",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              "Rp300.000",
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 13),
-                            )
-                          ],
-                        ),
+                        FutureBuilder<double>(
+                            future: database.getTotalTransactionByDateRepo(
+                                widget.selectedDate, 2),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              } else {
+                                if (snapshot.hasError) {
+                                  return Center(
+                                    child: Text("0"),
+                                  );
+                                }
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Expense",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      "Rp${snapshot.data!.toStringAsFixed(0)}",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 13),
+                                    )
+                                  ],
+                                );
+                              }
+                            }),
                       ],
-                    ),
+                    )
                   ],
                 ),
               ),
@@ -155,7 +188,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 title: Text(
                                   "Rp${snapshot.data![index].transaction.amount}",
-                                  style: TextStyle( 
+                                  style: TextStyle(
                                       fontWeight: FontWeight.w700,
                                       color: Colors.blueGrey,
                                       fontSize: 16),
@@ -170,16 +203,30 @@ class _HomePageState extends State<HomePage> {
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
-                                      Icons.delete,
-                                      color: Colors.blueGrey[400],
-                                    ),
+                                    IconButton(
+                                        icon: Icon(Icons.delete),
+                                        color: Colors.blueGrey[400],
+                                        onPressed: () {
+                                          database.deleteTransactionRepo(
+                                              snapshot
+                                                  .data![index].transaction.id);
+                                          setState(() {});
+                                        }),
                                     SizedBox(
                                       width: 10,
                                     ),
-                                    Icon(
-                                      Icons.edit,
+                                    IconButton(
+                                      icon: Icon(Icons.edit),
                                       color: Colors.blueGrey[400],
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    TransactionPage(
+                                                      transactionWithCategory:
+                                                          snapshot.data![index],
+                                                    )));
+                                      },
                                     )
                                   ],
                                 ),

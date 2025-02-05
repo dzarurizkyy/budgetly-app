@@ -1,10 +1,12 @@
-import 'package:expenses_tracker_app/pages/main_page.dart';
+import 'package:budgetly/models/transaction_with_category.dart';
+import 'package:budgetly/pages/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:expenses_tracker_app/models/database.dart';
+import 'package:budgetly/models/database.dart';
 
 class TransactionPage extends StatefulWidget {
-  const TransactionPage({super.key});
+  final TransactionWithCategory? transactionWithCategory;
+  const TransactionPage({super.key, required this.transactionWithCategory});
 
   @override
   State<TransactionPage> createState() => _TransactionPageState();
@@ -24,7 +26,7 @@ class _TransactionPageState extends State<TransactionPage> {
   Future insert(
       int amount, DateTime date, String nameDetail, int categoryId) async {
     DateTime now = DateTime.now();
-    final check = await database.into(database.transactions).insertReturning(
+    await database.into(database.transactions).insertReturning(
         TransactionsCompanion.insert(
             name: nameDetail,
             categoryId: categoryId,
@@ -32,8 +34,6 @@ class _TransactionPageState extends State<TransactionPage> {
             transactionDate: now,
             createdAt: now,
             updatedAt: now));
-
-    print("aman : ${check}");
   }
 
   Future<List<Category>> getAllCategory(int type) async {
@@ -42,8 +42,25 @@ class _TransactionPageState extends State<TransactionPage> {
 
   @override
   void initState() {
-    type = 2;
+    if (widget.transactionWithCategory != null) {
+      updateTransactionView(widget.transactionWithCategory);
+    } else {
+      type = 2;
+    }
     super.initState();
+  }
+
+  void updateTransactionView(TransactionWithCategory? transactionWithCategory) {
+    if (transactionWithCategory == null) return;
+    amountController.text =
+        transactionWithCategory.transaction.amount.toString();
+    dateController.text = DateFormat("yyyy-MM-dd")
+        .format(transactionWithCategory.transaction.transactionDate);
+    detailController.text = transactionWithCategory.transaction.name.toString();
+    type = transactionWithCategory.category.type;
+    (type == 2) ? isExpense = true : isExpense = false;
+    selectedCategory =
+        transactionWithCategory.transaction.categoryId.toString();
   }
 
   @override
@@ -55,7 +72,7 @@ class _TransactionPageState extends State<TransactionPage> {
             backgroundColor: Colors.blueGrey,
             iconTheme: IconThemeData(color: Colors.white),
             title: Text(
-              "Add Transactions",
+              "${widget.transactionWithCategory == null ? 'Add' : 'Edit'} Transactions",
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
             ),
@@ -207,11 +224,18 @@ class _TransactionPageState extends State<TransactionPage> {
               Center(
                   child: ElevatedButton(
                       onPressed: () {
-                        insert(
-                            int.parse(amountController.text),
-                            DateTime.parse(dateController.text),
-                            detailController.text,
-                            int.parse(selectedCategory ?? defaultCategory));
+                        widget.transactionWithCategory == null
+                            ? insert(
+                                int.parse(amountController.text),
+                                DateTime.parse(dateController.text),
+                                detailController.text,
+                                int.parse(selectedCategory ?? defaultCategory))
+                            : database.updateTransaction(
+                                widget.transactionWithCategory!.transaction.id,
+                                int.parse(amountController.text),
+                                int.parse(selectedCategory ?? defaultCategory),
+                                DateTime.parse(dateController.text),
+                                detailController.text);
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => MainPage()));
                       },

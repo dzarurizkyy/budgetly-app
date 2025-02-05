@@ -1,4 +1,4 @@
-import 'package:expenses_tracker_app/pages/main_page.dart';
+import 'package:budgetly/pages/main_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {

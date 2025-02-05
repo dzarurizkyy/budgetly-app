@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:expenses_tracker_app/models/database.dart';
+import 'package:budgetly/models/database.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
