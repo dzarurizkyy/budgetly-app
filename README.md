@@ -56,5 +56,5 @@ This is expense tracker app for managing finances, tracking incomes and expenses
 - [Launcher Icons](https://pub.dev/packages/flutter_launcher_icons) : App icon customization
 - [Calendar App Bar](https://pub.dev/documentation/calendar_appbar) : Calendar-based app bar 
 
-## Contributor 👤
+## Contributor 🤝
    - [Dzaru Rizky Fathan Fortuna](https://www.linkedin.com/in/dzarurizky/)
